@@ -43,31 +43,61 @@ export default defineConfig([
 ])
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Application Setup
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Technology Stack
+- React 18.2.0
+- TypeScript
+- Vite 8.0.1
+- Node.js 24.21.0
+- npm 11.19.0
+
+### Installation
+
+```bash
+npm install
 ```
+
+### Development Server
+
+```bash
+npm run dev
+```
+
+### Local Application URL
+
+http://localhost:5173/
+
+### Production Build
+
+```bash
+npm run build
+```
+
+### Build Output
+
+`dist/`
+
+### Environment Variables
+
+No environment variables are currently required.
+
+### Application Validation
+
+- Application successfully loaded in Google Chrome.
+- HTTP response verified using `curl.exe -I http://localhost:5173`.
+- HTTP Status: 200 OK.
+- Production build completed successfully.
+
+### Application Configuration Summary
+
+| Configuration | Value |
+|---|---|
+| Framework | React |
+| Build Tool | Vite |
+| Development Port | 5173 |
+| Start Command | npm run dev |
+| Build Command | npm run build |
+| Output Directory | dist |
+| Environment Variables | None identified |
