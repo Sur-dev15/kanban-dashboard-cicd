@@ -1,105 +1,65 @@
-# React + TypeScript + Vite
+# Kanban Dashboard – Docker, Jenkins & AWS CI/CD
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Project Overview
 
-Currently, two official plugins are available:
+This project demonstrates automated deployment of a React + TypeScript Kanban Dashboard using Docker, Jenkins, GitHub, Docker Hub, and AWS EC2.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The CI/CD pipeline automatically builds the application, creates a Docker image, pushes the image to Docker Hub, deploys it to AWS EC2, and validates application health.
 
-## React Compiler
+## Technology Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-
-## Application Setup
-
-### Technology Stack
-- React 18.2.0
+- React
 - TypeScript
-- Vite 8.0.1
-- Node.js 24.21.0
-- npm 11.19.0
+- Vite
+- Docker
+- Jenkins
+- GitHub
+- Docker Hub
+- AWS EC2
+- Nginx
 
-### Installation
+## Application Details
+
+- Local development port: `5173`
+- Docker container port: `8080`
+- Production HTTP port: `80`
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Environment variables: None required
+
+## Run Locally
+
+Prerequisites: Node.js and npm.
 
 ```bash
 npm install
-```
-
-### Development Server
-
-```bash
 npm run dev
 ```
 
-### Local Application URL
+Open `http://localhost:5173`.
 
-http://localhost:5173/
-
-### Production Build
+Build the application:
 
 ```bash
 npm run build
 ```
 
-### Build Output
+## Docker Configuration
 
-`dist/`
+The Dockerfile uses a multi-stage build:
 
-### Environment Variables
+1. Node.js Alpine builds the React application.
+2. Nginx Unprivileged serves the production build.
+3. The container runs as non-root user UID 101.
+4. Docker HEALTHCHECK monitors application health.
 
-No environment variables are currently required.
+Build the image:
 
-### Application Validation
+```bash
+docker build -t kanban-dashboard .
+```
 
-- Application successfully loaded in Google Chrome.
-- HTTP response verified using `curl.exe -I http://localhost:5173`.
-- HTTP Status: 200 OK.
-- Production build completed successfully.
+Run the container:
 
-### Application Configuration Summary
-
-| Configuration | Value |
-|---|---|
-| Framework | React |
-| Build Tool | Vite |
-| Development Port | 5173 |
-| Start Command | npm run dev |
-| Build Command | npm run build |
-| Output Directory | dist |
-| Environment Variables | None identified |
-Webhook automatic build test
-Testing automatic Jenkins CI/CD deployment
+```bash
+docker run -
