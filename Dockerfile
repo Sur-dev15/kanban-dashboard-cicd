@@ -11,6 +11,7 @@ RUN npm run build
 
 # Non-root production stage
 FROM nginxinc/nginx-unprivileged:alpine
+USER 101
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
