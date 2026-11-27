@@ -114,6 +114,9 @@ pipeline {
                         --retry-connrefused http://localhost/
 
                     echo "Application validation successful!"
+
+                    echo "Simulating deployment failure for rollback test"
+                    exit 1
                 '''
             }
         }
