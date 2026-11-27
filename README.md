@@ -101,3 +101,4 @@ No environment variables are currently required.
 | Build Command | npm run build |
 | Output Directory | dist |
 | Environment Variables | None identified |
+Webhook automatic build test
