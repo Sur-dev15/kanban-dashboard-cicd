@@ -47,6 +47,21 @@ pipeline {
             }
         }
 
+        stage('Save Previous Deployment') {
+            steps {
+                sh '''
+                    if docker inspect kanban-dashboard >/dev/null 2>&1; then
+                        docker inspect --format='{{.Image}}' \
+                            kanban-dashboard > "$WORKSPACE/previous-image-$BUILD_NUMBER.txt"
+                        echo "Previous deployment image saved."
+                    else
+                        echo "NONE" > "$WORKSPACE/previous-image-$BUILD_NUMBER.txt"
+                        echo "No previous deployment exists."
+                    fi
+                '''
+            }
+        }
+
         stage('Deploy on EC2') {
             steps {
                 sh '''
@@ -69,6 +84,8 @@ pipeline {
                 sh '''
                     echo "Checking Docker container health..."
 
+                    HEALTH="starting"
+
                     for i in $(seq 1 30); do
                         HEALTH=$(docker inspect \
                             --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' \
@@ -77,12 +94,10 @@ pipeline {
                         echo "Health status: $HEALTH"
 
                         if [ "$HEALTH" = "healthy" ]; then
-                            echo "Container is healthy!"
                             break
                         fi
 
                         if [ "$HEALTH" = "unhealthy" ] || [ "$HEALTH" = "no-healthcheck" ]; then
-                            echo "Container health verification failed!"
                             docker logs kanban-dashboard
                             exit 1
                         fi
@@ -91,12 +106,9 @@ pipeline {
                     done
 
                     if [ "$HEALTH" != "healthy" ]; then
-                        echo "Container did not become healthy within 60 seconds."
                         docker logs kanban-dashboard
                         exit 1
                     fi
-
-                    echo "Checking application HTTP response..."
 
                     curl -f --retry 5 --retry-delay 2 \
                         --retry-connrefused http://localhost/
@@ -104,6 +116,48 @@ pipeline {
                     echo "Application validation successful!"
                 '''
             }
+        }
+    }
+
+    post {
+        failure {
+            echo 'Deployment failed. Starting automatic rollback...'
+
+            sh '''
+                PREVIOUS_FILE="$WORKSPACE/previous-image-$BUILD_NUMBER.txt"
+
+                if [ ! -f "$PREVIOUS_FILE" ]; then
+                    echo "No saved deployment found. Nothing to roll back."
+                    exit 0
+                fi
+
+                PREVIOUS_IMAGE=$(cat "$PREVIOUS_FILE")
+
+                docker stop kanban-dashboard || true
+                docker rm kanban-dashboard || true
+
+                if [ "$PREVIOUS_IMAGE" = "NONE" ]; then
+                    echo "No previous version was available."
+                    exit 0
+                fi
+
+                echo "Restoring previous image: $PREVIOUS_IMAGE"
+
+                docker run -d \
+                    --name kanban-dashboard \
+                    --restart unless-stopped \
+                    --memory=512m \
+                    --cpus=1 \
+                    -p 80:8080 \
+                    "$PREVIOUS_IMAGE"
+
+                sleep 5
+
+                curl -f --retry 10 --retry-delay 2 \
+                    --retry-connrefused http://localhost/
+
+                echo "Previous deployment restored successfully."
+            '''
         }
     }
 }
