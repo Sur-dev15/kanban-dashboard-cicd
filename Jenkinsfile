@@ -1,5 +1,4 @@
 
-
 pipeline {
     agent any
 
@@ -61,9 +60,48 @@ pipeline {
                         --cpus=1 \
                         -p 80:8080 \
                         $DOCKER_IMAGE:$BUILD_NUMBER
+                '''
+            }
+        }
 
-                    sleep 5
-                    curl -f http://localhost/
+        stage('Verify Container Health') {
+            steps {
+                sh '''
+                    echo "Checking Docker container health..."
+
+                    for i in $(seq 1 30); do
+                        HEALTH=$(docker inspect \
+                            --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' \
+                            kanban-dashboard)
+
+                        echo "Health status: $HEALTH"
+
+                        if [ "$HEALTH" = "healthy" ]; then
+                            echo "Container is healthy!"
+                            break
+                        fi
+
+                        if [ "$HEALTH" = "unhealthy" ] || [ "$HEALTH" = "no-healthcheck" ]; then
+                            echo "Container health verification failed!"
+                            docker logs kanban-dashboard
+                            exit 1
+                        fi
+
+                        sleep 2
+                    done
+
+                    if [ "$HEALTH" != "healthy" ]; then
+                        echo "Container did not become healthy within 60 seconds."
+                        docker logs kanban-dashboard
+                        exit 1
+                    fi
+
+                    echo "Checking application HTTP response..."
+
+                    curl -f --retry 5 --retry-delay 2 \
+                        --retry-connrefused http://localhost/
+
+                    echo "Application validation successful!"
                 '''
             }
         }
